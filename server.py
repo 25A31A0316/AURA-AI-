@@ -1,9 +1,10 @@
 """
-Aura AI - High-Performance Server
+Aura AI - Universal Assistant Server
 Features:
+- Real-Time Live Web Grounding across all data sectors
+- Verified Real-Time Sources Streaming
 - Local Ollama Streaming Proxy (Zero API Keys)
-- Live Web Search & Grounding across all data sectors (/api/search & live chat grounding)
-- Multilingual System Instructions
+- Multilingual Support
 """
 
 import http.server
@@ -19,10 +20,11 @@ import re
 PORT = 8000
 OLLAMA_HOST = "http://localhost:11434"
 
-def fetch_web_results(query, max_results=5):
+def fetch_web_results(query, max_results=4):
     """Fetches real-time web articles, news, and sector-wide data via DuckDuckGo."""
     try:
-        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(query)}"
+        clean_q = re.sub(r'[^\w\s-]', ' ', query).strip()
+        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(clean_q)}"
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9',
@@ -39,7 +41,7 @@ def fetch_web_results(query, max_results=5):
         results = []
         for i, snippet in enumerate(snippets[:max_results]):
             clean_s = re.sub(r'<[^>]+>', '', snippet).strip()
-            clean_t = re.sub(r'<[^>]+>', '', titles[i]).strip() if i < len(titles) else f"Article {i+1}"
+            clean_t = re.sub(r'<[^>]+>', '', titles[i]).strip() if i < len(titles) else f"Source {i+1}"
             link_url = links[i] if i < len(links) else ""
             if 'uddg=' in link_url:
                 try:
@@ -100,35 +102,42 @@ class AuraHandler(http.server.SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
-        # 3. Streaming Chat Proxy with optional Live Web Grounding
+        # 3. Streaming Chat Proxy with Real-Time Web Grounding & Sources
         if self.path == '/api/chat':
             length = int(self.headers.get('Content-Length', 0))
             raw_body = self.rfile.read(length)
 
             try:
                 data = json.loads(raw_body.decode('utf-8'))
-                use_web = data.get('webSearch', False)
+                use_web = data.get('webSearch', True)
                 messages = data.get('messages', [])
+                sources_footer = ""
 
-                # If live web search is enabled, search for context on the last user message
+                # Real-Time Live Grounding
                 if use_web and messages:
                     last_user_msg = next((m['content'] for m in reversed(messages) if m.get('role') == 'user'), None)
                     if last_user_msg:
-                        clean_query = last_user_msg.strip()[:120]
+                        clean_query = last_user_msg.strip()[:140]
                         articles = fetch_web_results(clean_query, max_results=4)
                         if articles:
-                            context_text = "\n\n[VERIFIED DATA ARCHIVES & RECENT 2026 ARTICLES - ALL SECTORS]:\n"
-                            for idx, a in enumerate(articles):
-                                context_text += f"{idx+1}. {a['title']}: {a['snippet']} (Source: {a['url']})\n"
-                            context_text += "\nINSTRUCTION: Synthesize the verified records and 2026 articles above alongside universal knowledge spanning ancient history to the present.\n"
+                            web_context = "\n".join([f"[{i+1}] {a['title']}: {a['snippet']} (Source: {a['url']})" for i, a in enumerate(articles)])
+                            grounded_prompt = f"""[REAL-TIME LIVE WEB DATA & RECENT ARTICLES]:
+{web_context}
 
-                            # Inject into system prompt or append to context
-                            if messages and messages[0].get('role') == 'system':
-                                messages[0]['content'] += context_text
-                            else:
-                                messages.insert(0, {'role': 'system', 'content': context_text})
+[USER QUESTION]:
+{last_user_msg}
 
-                # Forward request to local Ollama
+INSTRUCTION: You are Aura AI. Answer conversationally, clearly, and accurately using the real-time verified articles and facts above. Do not claim outdated knowledge cutoff dates."""
+                            
+                            for m in reversed(messages):
+                                if m.get('role') == 'user':
+                                    m['content'] = grounded_prompt
+                                    break
+
+                            source_links = [f"- [{a['title']}]({a['url']})" for a in articles if a.get('url')]
+                            if source_links:
+                                sources_footer = "\n\n**🌐 Real-Time Sources:**\n" + "\n".join(source_links)
+
                 ollama_payload = {
                     'model': data.get('model', 'llama3.2:1b'),
                     'messages': messages,
@@ -154,6 +163,16 @@ class AuraHandler(http.server.SimpleHTTPRequestHandler):
                             self.wfile.flush()
                         except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                             break
+
+                    # Append verified real-time sources footer as final chunk
+                    if sources_footer:
+                        final_chunk = json.dumps({'message': {'content': sources_footer}, 'done': False}) + "\n"
+                        try:
+                            self.wfile.write(final_chunk.encode('utf-8'))
+                            self.wfile.flush()
+                        except Exception:
+                            pass
+
             except urllib.error.URLError:
                 self.send_response(503)
                 self.send_header('Content-Type', 'application/json')
@@ -176,7 +195,7 @@ def main():
         with socketserver.TCPServer(("", PORT), AuraHandler) as httpd:
             print("=" * 60)
             print(f"  [Aura AI] Server running at: http://localhost:{PORT}")
-            print("  [Features] Local Ollama + Live Web Grounding + Voice & Multilingual")
+            print("  [Features] Real-Time Web Grounding • Voice Talk Mode • Multilingual")
             print("=" * 60)
             httpd.serve_forever()
     except KeyboardInterrupt:

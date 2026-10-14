@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aura AI — Multilingual Local Assistant with Live Web</title>
+  <title>Aura AI — Real-Time Universal Assistant with Voice Talk</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -29,11 +29,18 @@
         </div>
       </div>
       <div class="header-actions">
-        <!-- Live Web Search Toggle -->
-        <button class="btn-action active-toggle" id="btnToggleWeb" title="Toggle Live 2026 Web Search & Articles Grounding">
+        <!-- Real-Time Web Grounding Toggle -->
+        <button class="btn-action active-toggle" id="btnToggleWeb" title="Real-Time Web Search across all sectors">
           <span id="webIcon">🌐</span>
-          <span id="webLabel">Web: ON</span>
+          <span id="webLabel">Real-Time Web: ON</span>
         </button>
+
+        <!-- Auto-Talk Voice Mode Toggle (Aura talks back out loud) -->
+        <button class="btn-action active-toggle pulse-accent" id="btnToggleTalk" title="Aura talks back to you out loud automatically">
+          <span id="talkIcon">🗣️</span>
+          <span id="talkLabel">Voice Talk: ON</span>
+        </button>
+
         <button class="btn-action" id="btnNewChat" title="Start a fresh conversation">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>New Chat</span>
@@ -51,36 +58,36 @@
         <!-- Welcome Screen -->
         <div class="welcome-card" id="welcomeCard">
           <div class="welcome-orb">⚡</div>
-          <h2 class="welcome-title">Universal AI: Ancient Antiquity to 2026</h2>
-          <p class="welcome-subtitle">Universal knowledge from ancient civilisations (3000+ BCE) to real-time 2026 articles & data • All sectors • Multilingual • Voice chat</p>
+          <h2 class="welcome-title">Universal AI: Ancient Antiquity to Real-Time 2026</h2>
+          <p class="welcome-subtitle">Real-time live web articles & sector data • Aura talks back out loud • Multilingual across all world languages</p>
           
           <div class="prompts-grid">
-            <button class="starter-card" data-prompt="What are the most notable world news and scientific breakthroughs happening recently in 2026?">
+            <button class="starter-card" data-prompt="What are the most notable breaking news, economic trends, and scientific breakthroughs happening right now in 2026?">
               <span class="card-icon">🌐</span>
               <div class="card-text">
-                <span class="card-heading">Live 2026 World News</span>
-                <span class="card-desc">Search recent articles, tech breakthroughs & current trends</span>
+                <span class="card-heading">Real-Time 2026 Intelligence</span>
+                <span class="card-desc">Search current live articles, sector breakthroughs & global news</span>
               </div>
             </button>
-            <button class="starter-card" data-prompt="Can we converse in another language? Please introduce yourself in English, Hindi, Spanish, and Telugu.">
+            <button class="starter-card" data-prompt="Can you talk to me in Telugu and Hindi? Please introduce yourself and share an inspirational ancient proverb.">
               <span class="card-icon">🗣️</span>
               <div class="card-text">
-                <span class="card-heading">Multilingual Greetings</span>
-                <span class="card-desc">Talk fluently in Hindi, Telugu, Spanish, French, etc.</span>
+                <span class="card-heading">Voice & Multilingual Chat</span>
+                <span class="card-desc">Aura talks back fluently in Telugu, Hindi, Spanish, English, etc.</span>
               </div>
             </button>
-            <button class="starter-card" data-prompt="Give me a comprehensive analysis of the global economy, energy transition, and tech sector right now.">
+            <button class="starter-card" data-prompt="Trace human knowledge from ancient Sumerian astronomy (3000 BCE) all the way to 2026 space telescopes and quantum AI.">
+              <span class="card-icon">🏛️</span>
+              <div class="card-text">
+                <span class="card-heading">Ancient Antiquity to 2026</span>
+                <span class="card-desc">From Mesopotamia & Vedic origins to modern quantum computing</span>
+              </div>
+            </button>
+            <button class="starter-card" data-prompt="Give me a comprehensive deep-dive into all data sectors right now: renewable energy, AI medicine, space exploration, and finance.">
               <span class="card-icon">📊</span>
               <div class="card-text">
                 <span class="card-heading">All Data Sectors Analysis</span>
-                <span class="card-desc">Explore finance, energy, medicine, AI and politics</span>
-              </div>
-            </button>
-            <button class="starter-card" data-prompt="Explain quantum computing with a simple, vivid real-world analogy.">
-              <span class="card-icon">💡</span>
-              <div class="card-text">
-                <span class="card-heading">Deep Explanations</span>
-                <span class="card-desc">Break down complex physics and science intuitively</span>
+                <span class="card-desc">Explore energy, medicine, AI, astronomy, finance, and geopolitics</span>
               </div>
             </button>
           </div>
@@ -96,12 +103,12 @@
             id="chatInput" 
             class="chat-textarea" 
             rows="1" 
-            placeholder="Type your message or click the microphone to speak... (Press Enter to send)"
+            placeholder="Type your message or click the mic to talk... Aura will talk back to you! (Enter to send)"
             aria-label="Chat input"></textarea>
           
           <div class="input-actions-cluster">
             <!-- Voice Input Button (Speech to Text) -->
-            <button class="btn-dock-icon" id="btnVoiceInput" title="Speak message (Voice to Text)" aria-label="Voice input">
+            <button class="btn-dock-icon" id="btnVoiceInput" title="Speak to Aura (Microphone Voice Input)" aria-label="Voice input">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
             
@@ -114,9 +121,9 @@
         <div class="dock-footer">
           <span id="modelIndicator">Model: llama3.2:1b</span>
           <span>•</span>
-          <span id="voiceStatusHint">🏛️ Ancient Antiquity to 2026 Future • Multilingual • Voice Chat</span>
+          <span id="voiceStatusHint">🗣️ Real-Time Web Grounding & Two-Way Voice Talk Active</span>
           <span>•</span>
-          <span>Multilingual</span>
+          <span>Ancient to 2026</span>
         </div>
       </div>
     </footer>
@@ -136,16 +143,16 @@
           <span class="form-hint">Matches any model pulled on your local Ollama instance.</span>
         </div>
         <div class="form-group">
-          <label class="form-label" for="settingVoiceGender">Read Aloud Voice</label>
+          <label class="form-label" for="settingVoiceSelect">Aura's Speaking Voice</label>
           <select id="settingVoiceSelect" class="form-input">
-            <option value="auto">Auto-detect Language</option>
+            <option value="auto">Auto-detect Language & Best Natural Voice</option>
           </select>
-          <span class="form-hint">Aura will read aloud in matching language and accents.</span>
+          <span class="form-hint">Aura talks back out loud in the language and voice chosen.</span>
         </div>
         <div class="form-group">
-          <label class="form-label" for="settingSystemPrompt">System Instruction (Multilingual)</label>
-          <textarea id="settingSystemPrompt" class="form-input" rows="3" placeholder="Multilingual conversational AI instruction..."></textarea>
-          <span class="form-hint">Instructs the AI on tone, languages, and response formatting.</span>
+          <label class="form-label" for="settingSystemPrompt">System Instruction (Universal & Multilingual)</label>
+          <textarea id="settingSystemPrompt" class="form-input" rows="3" placeholder="Universal conversational AI instruction..."></textarea>
+          <span class="form-hint">Controls Aura's knowledge depth, tone, languages, and answers.</span>
         </div>
         <div class="form-group">
           <label class="form-label" for="settingTemperature">

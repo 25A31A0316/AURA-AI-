@@ -1,24 +1,24 @@
 /**
- * Aura AI - Multilingual Assistant with Voice Chat & Live Web Grounding
+ * Aura AI - Real-Time Universal Assistant with Auto-Voice Talk
  * Features:
- * - Local Ollama Streaming Proxy
- * - Speech-to-Text (Voice Input) & Text-to-Speech (Read Aloud)
- * - Multilingual System Prompt (English, Hindi, Telugu, Spanish, French, etc.)
- * - Live Web Search Grounding across all data sectors
+ * - Real-Time Web Grounding & Verified Sources
+ * - Two-Way Voice Talk (Aura talks back out loud automatically!)
+ * - Speech-to-Text Microphone Dictation
+ * - Universal Scope: Ancient Antiquity to Real-Time 2026
+ * - Multilingual Support (Telugu, Hindi, Spanish, French, English, etc.)
  */
 
-const DEFAULT_SYSTEM_PROMPT = `You are Aura AI, a universal, omniscient, deeply knowledgeable, and multilingual conversation partner.
-- CHRONOLOGICAL SCOPE (ANCIENT TO 2026): You possess deep knowledge spanning the entirety of human history, from ancient prehistory, ancient civilisations (Mesopotamia, Indus Valley, Ancient Egypt, Vedic India, Classical Greece and Rome, Dynastic China, the Maya, Incas, and global antiquity), classical philosophy, theology, astronomy, and archaeology, through the Middle Ages, the Renaissance, Scientific Revolutions, modern history, and up to real-time 2026 articles, breaking discoveries, and current affairs.
-- ALL DATA SECTORS: You comfortably analyze and synthesize across science, quantum physics, space exploration, medicine, economics, literature, art, world religions, and global politics.
-- REAL-TIME 2026 AWARENESS: You are equipped with live internet web grounding. When queried about recent events or 2026 developments, synthesize verified live articles and data. NEVER claim a static knowledge cutoff date.
-- MULTILINGUAL MASTERY: You speak and understand all world languages fluently (including English, Hindi, Telugu, Tamil, Spanish, French, German, Japanese, Chinese, Arabic, Russian, and more). Always reply naturally in the language spoken or requested by the user.
-- TONE & STRUCTURE: Deliver insightful, well-structured, comprehensive, and engaging explanations using markdown, bold headers, bullet points, and code formatting where appropriate.`;
+const DEFAULT_SYSTEM_PROMPT = `You are Aura AI, a universal, deeply knowledgeable, real-time, and multilingual AI companion.
+- CHRONOLOGICAL SCOPE (ANCIENT TO 2026): You possess profound knowledge spanning human history from ancient prehistory, ancient civilisations (Mesopotamia, Indus Valley, Ancient Egypt, Vedic India, Classical Greece and Rome, Dynastic China, the Maya, Incas, and global antiquity), through medieval and modern eras, up to real-time 2026 articles, breaking news, and current sector data.
+- REAL-TIME AWARENESS: You actively ground your answers in live web research and 2026 articles provided to you. Always provide up-to-date, accurate answers.
+- MULTILINGUAL MASTERY: You speak and understand all world languages fluently (including English, Telugu, Hindi, Tamil, Spanish, French, German, Japanese, Chinese, Arabic, and more). Always reply naturally in the language spoken or requested by the user.
+- CONVERSATIONAL VOICE: Speak naturally, engagingly, and warmly like an articulate, smart partner having a genuine conversation with the user.`;
 
 const state = {
   model: localStorage.getItem('aura_model') || 'llama3.2:1b',
   systemPrompt: (() => {
     const p = localStorage.getItem('aura_prompt');
-    if (!p || p.length < 300) {
+    if (!p || p.length < 250) {
       localStorage.setItem('aura_prompt', DEFAULT_SYSTEM_PROMPT);
       return DEFAULT_SYSTEM_PROMPT;
     }
@@ -26,6 +26,7 @@ const state = {
   })(),
   temperature: parseFloat(localStorage.getItem('aura_temp')) || 0.7,
   webSearch: localStorage.getItem('aura_web') !== 'false', // Default ON
+  autoTalk: localStorage.getItem('aura_autotalk') !== 'false', // Default ON: Aura talks back out loud!
   voiceLanguage: localStorage.getItem('aura_voice') || 'auto',
   messages: []
 };
@@ -36,6 +37,7 @@ let recognition = null;
 let isListening = false;
 let currentUtterance = null;
 let activeSpeakingBtn = null;
+let speechSilenceTimer = null;
 
 // DOM Elements
 const dom = {
@@ -45,6 +47,9 @@ const dom = {
   btnToggleWeb: document.getElementById('btnToggleWeb'),
   webIcon: document.getElementById('webIcon'),
   webLabel: document.getElementById('webLabel'),
+  btnToggleTalk: document.getElementById('btnToggleTalk'),
+  talkIcon: document.getElementById('talkIcon'),
+  talkLabel: document.getElementById('talkLabel'),
   btnNewChat: document.getElementById('btnNewChat'),
   btnSettings: document.getElementById('btnSettings'),
   chatViewport: document.getElementById('chatViewport'),
@@ -75,6 +80,7 @@ const dom = {
 document.addEventListener('DOMContentLoaded', () => {
   updateModelLabels();
   updateWebSearchUI();
+  updateAutoTalkUI();
   checkOllamaStatus();
   initVoiceFeatures();
   bindEvents();
@@ -91,11 +97,31 @@ function updateWebSearchUI() {
     if (state.webSearch) {
       dom.btnToggleWeb.classList.add('active-toggle');
       dom.webIcon.textContent = '🌐';
-      dom.webLabel.textContent = 'Web: ON';
+      dom.webLabel.textContent = 'Real-Time Web: ON';
     } else {
       dom.btnToggleWeb.classList.remove('active-toggle');
       dom.webIcon.textContent = '⭕';
       dom.webLabel.textContent = 'Web: OFF';
+    }
+  }
+}
+
+function updateAutoTalkUI() {
+  if (dom.btnToggleTalk) {
+    if (state.autoTalk) {
+      dom.btnToggleTalk.classList.add('active-toggle', 'pulse-accent');
+      dom.talkIcon.textContent = '🗣️';
+      dom.talkLabel.textContent = 'Voice Talk: ON';
+      if (dom.voiceStatusHint) {
+        dom.voiceStatusHint.textContent = '🗣️ Voice Talk Active (Aura talks back out loud!) • Real-Time Web';
+      }
+    } else {
+      dom.btnToggleTalk.classList.remove('active-toggle', 'pulse-accent');
+      dom.talkIcon.textContent = '🔇';
+      dom.talkLabel.textContent = 'Voice Talk: OFF';
+      if (dom.voiceStatusHint) {
+        dom.voiceStatusHint.textContent = 'Real-Time Web Grounding Active • Ancient to 2026';
+      }
     }
   }
 }
@@ -126,7 +152,7 @@ function initVoiceFeatures() {
     const populateVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       if (dom.settingVoiceSelect) {
-        dom.settingVoiceSelect.innerHTML = '<option value="auto">Auto-detect Language</option>';
+        dom.settingVoiceSelect.innerHTML = '<option value="auto">Auto-detect Language & Best Natural Voice</option>';
         voices.forEach(v => {
           const opt = document.createElement('option');
           opt.value = v.lang;
@@ -153,7 +179,9 @@ function initVoiceFeatures() {
     recognition.onstart = () => {
       isListening = true;
       if (dom.btnVoiceInput) dom.btnVoiceInput.classList.add('listening');
-      showToast('🎙️ Listening... Speak in any language!');
+      showToast('🎙️ Listening... Speak naturally! Aura will talk back to you.');
+      // Stop any current speaking while user talks
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     };
 
     recognition.onresult = (e) => {
@@ -165,6 +193,15 @@ function initVoiceFeatures() {
         dom.chatInput.value = transcript;
         dom.chatInput.style.height = 'auto';
         dom.chatInput.style.height = Math.min(dom.chatInput.scrollHeight, 180) + 'px';
+
+        // Auto-submit after 1.2s of silence when final sentence detected
+        clearTimeout(speechSilenceTimer);
+        speechSilenceTimer = setTimeout(() => {
+          if (isListening && dom.chatInput.value.trim().length > 0) {
+            stopListening();
+            sendMessage();
+          }
+        }, 1300);
       }
     };
 
@@ -178,8 +215,7 @@ function initVoiceFeatures() {
 
     recognition.onend = () => {
       stopListening();
-      // If text was recognized, user can review and send
-      if (dom.chatInput.value.trim().length > 0) {
+      if (dom.chatInput.value.trim().length > 0 && !isGenerating) {
         dom.chatInput.focus();
       }
     };
@@ -210,56 +246,71 @@ function toggleListening() {
 
 function stopListening() {
   isListening = false;
+  clearTimeout(speechSilenceTimer);
   if (dom.btnVoiceInput) dom.btnVoiceInput.classList.remove('listening');
 }
 
-// Text to Speech
-function speakText(text, btn) {
-  if (!('speechSynthesis' in window)) {
-    showToast('Speech synthesis not supported in this browser.');
-    return;
-  }
+// Speak out loud (TTS)
+function speakText(text, btnElement = null) {
+  if (!('speechSynthesis' in window)) return;
 
   if (window.speechSynthesis.speaking) {
     window.speechSynthesis.cancel();
     if (activeSpeakingBtn) {
       activeSpeakingBtn.classList.remove('speaking');
       activeSpeakingBtn.querySelector('span').textContent = 'Speak';
-      if (activeSpeakingBtn === btn) {
+      if (activeSpeakingBtn === btnElement) {
         activeSpeakingBtn = null;
         return;
       }
     }
   }
 
-  // Clean markdown syntax for speech
-  const cleanSpeech = text
+  // Strip real-time sources footer and code blocks so Aura talks naturally
+  let speechContent = text.split('**🌐 Real-Time Sources:**')[0];
+  speechContent = speechContent
     .replace(/```[\s\S]*?```/g, 'Code block omitted.')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/[*_#>-]/g, '')
     .trim();
 
-  if (!cleanSpeech) return;
+  if (!speechContent) return;
 
-  const utter = new SpeechSynthesisUtterance(cleanSpeech);
+  const utter = new SpeechSynthesisUtterance(speechContent);
+  const voices = window.speechSynthesis.getVoices();
+
+  // Smart natural voice selection
+  if (state.voiceLanguage && state.voiceLanguage !== 'auto') {
+    utter.lang = state.voiceLanguage;
+  } else {
+    // Pick highest quality natural voice
+    const naturalVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural')) && v.lang.startsWith(navigator.language))
+                      || voices.find(v => v.name.includes('Natural') || v.name.includes('Google'))
+                      || voices[0];
+    if (naturalVoice) utter.voice = naturalVoice;
+  }
+
   utter.rate = 1.0;
   utter.pitch = 1.0;
 
-  // Set voice language if configured
-  if (state.voiceLanguage && state.voiceLanguage !== 'auto') {
-    utter.lang = state.voiceLanguage;
+  if (btnElement) {
+    activeSpeakingBtn = btnElement;
+    btnElement.classList.add('speaking');
+    btnElement.querySelector('span').textContent = 'Stop';
   }
 
   utter.onstart = () => {
-    activeSpeakingBtn = btn;
-    btn.classList.add('speaking');
-    btn.querySelector('span').textContent = 'Stop';
+    if (dom.btnToggleTalk && state.autoTalk) {
+      dom.btnToggleTalk.classList.add('pulse-accent');
+    }
   };
 
   utter.onend = utter.onerror = () => {
-    btn.classList.remove('speaking');
-    btn.querySelector('span').textContent = 'Speak';
-    activeSpeakingBtn = null;
+    if (btnElement) {
+      btnElement.classList.remove('speaking');
+      btnElement.querySelector('span').textContent = 'Speak';
+      activeSpeakingBtn = null;
+    }
   };
 
   window.speechSynthesis.speak(utter);
@@ -274,10 +325,21 @@ function bindEvents() {
     state.webSearch = !state.webSearch;
     localStorage.setItem('aura_web', state.webSearch.toString());
     updateWebSearchUI();
-    showToast(state.webSearch ? '🌐 Live Web Grounding Enabled' : '⭕ Web Grounding Disabled (Offline Only)');
+    showToast(state.webSearch ? '🌐 Real-Time Web Grounding Enabled' : '⭕ Web Grounding Disabled (Offline Only)');
   });
 
-  // Voice input button
+  // Voice talk toggle (Aura talks back out loud!)
+  dom.btnToggleTalk.addEventListener('click', () => {
+    state.autoTalk = !state.autoTalk;
+    localStorage.setItem('aura_autotalk', state.autoTalk.toString());
+    updateAutoTalkUI();
+    if (!state.autoTalk && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    showToast(state.autoTalk ? '🗣️ Voice Talk Active: Aura will talk back to you out loud!' : '🔇 Voice Talk Muted: Text only');
+  });
+
+  // Voice input button (Microphone)
   if (dom.btnVoiceInput) {
     dom.btnVoiceInput.addEventListener('click', toggleListening);
   }
@@ -388,6 +450,7 @@ async function sendMessage() {
   if (!text || isGenerating) return;
 
   stopListening();
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
 
   // Hide welcome hero on first message
   dom.welcomeCard.style.display = 'none';
@@ -468,7 +531,12 @@ async function sendMessage() {
     }
 
     state.messages.push({ role: 'assistant', content: accumulatedResponse });
-    attachActionButtons(row, accumulatedResponse);
+    const speakBtn = attachActionButtons(row, accumulatedResponse);
+
+    // Auto-Speak: Aura talks back out loud automatically!
+    if (state.autoTalk && accumulatedResponse) {
+      speakText(accumulatedResponse, speakBtn);
+    }
 
   } catch (err) {
     if (err.name !== 'AbortError') {
@@ -513,7 +581,7 @@ function appendMessage(role, text) {
 
 function attachActionButtons(row, fullText) {
   const wrapper = row.querySelector('.message-bubble-wrapper');
-  if (!wrapper || wrapper.querySelector('.message-actions')) return;
+  if (!wrapper || wrapper.querySelector('.message-actions')) return null;
 
   const actions = document.createElement('div');
   actions.className = 'message-actions';
@@ -544,9 +612,10 @@ function attachActionButtons(row, fullText) {
   actions.appendChild(speakBtn);
   actions.appendChild(copyBtn);
   wrapper.appendChild(actions);
+  return speakBtn;
 }
 
-// Lightweight Markdown Renderer (Code blocks, bold, lists, quotes)
+// Lightweight Markdown Renderer (Code blocks, bold, lists, quotes, links)
 function renderMarkdown(raw) {
   if (!raw) return '';
 
@@ -573,6 +642,9 @@ function renderMarkdown(raw) {
 
   // Italic: *text*
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // Markdown links: [title](url)
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>');
 
   // Bullet points
   html = html.replace(/^\s*[-*]\s+(.*)$/gm, '<li>$1</li>');
