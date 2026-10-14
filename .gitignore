@@ -1,0 +1,13 @@
+# Cloudflared binary
+cloudflared.exe
+*.exe
+
+# Python caches
+__pycache__/
+*.pyc
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

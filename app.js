@@ -44,10 +44,12 @@ Avoid filler words, introductory fluff, or apologies. Get straight to the essenc
   }
 };
 
-const DEFAULT_API_KEY = 'AQ.Ab8RN6IDSWFtrz0yFThzFl7uMH8D9EyDFN87KGczfjHFRPFggQ';
+const DEFAULT_API_KEY = '';
 const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 
 const DEFAULT_STATE = {
+  engine: 'ollama', // 'ollama' | 'gemini'
+  ollamaModel: 'llama3.2',
   apiKey: DEFAULT_API_KEY,
   model: DEFAULT_MODEL,
   persona: 'friendly',
@@ -136,10 +138,18 @@ function loadState() {
     if (saved) {
       const parsed = JSON.parse(saved);
       const merged = { ...DEFAULT_STATE, ...parsed };
-      if (!merged.apiKey || merged.apiKey.trim().length === 0 || merged.apiKey.startsWith('AQ.Ab8RN6Jw') || merged.apiKey.startsWith('AQ.Ab8RN6Jz')) {
+      // Use active default key if none exists or if it was the revoked test token
+      if (!merged.apiKey || merged.apiKey.trim().length === 0 || merged.apiKey === '') {
         merged.apiKey = DEFAULT_API_KEY;
       }
-      if (merged.model === 'gemini-1.5-flash' || merged.model === 'gemini-2.5-flash' || !merged.model) {
+      const validModels = [
+        'gemini-flash-lite-latest',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-latest',
+        'gemini-3.8-flash',
+        'gemini-pro-latest'
+      ];
+      if (!validModels.includes(merged.model) || merged.model === 'gemini-1.5-flash' || merged.model === 'gemini-2.0-flash' || merged.model === 'gemini-2.5-flash') {
         merged.model = DEFAULT_MODEL;
       }
       return merged;
@@ -255,11 +265,20 @@ const dom = {
   btnSaveSettings: document.getElementById('btnSaveSettings'),
   apiKeyInput: document.getElementById('apiKeyInput'),
   btnToggleApiKeyEye: document.getElementById('btnToggleApiKeyEye'),
+  btnTestApiKey: document.getElementById('btnTestApiKey'),
+  apiKeyTestStatus: document.getElementById('apiKeyTestStatus'),
   modelSelect: document.getElementById('modelSelect'),
   personaSelectionGrid: document.getElementById('personaSelectionGrid'),
   temperatureRange: document.getElementById('temperatureRange'),
   temperatureVal: document.getElementById('temperatureVal'),
 
+  engineSelect: document.getElementById('engineSelect'),
+  ollamaConfigSection: document.getElementById('ollamaConfigSection'),
+  geminiConfigSection: document.getElementById('geminiConfigSection'),
+  geminiModelGroup: document.getElementById('geminiModelGroup'),
+  ollamaModelInput: document.getElementById('ollamaModelInput'),
+  btnRefreshOllama: document.getElementById('btnRefreshOllama'),
+  ollamaConnectionBadge: document.getElementById('ollamaConnectionBadge'),
   toastContainer: document.getElementById('toastContainer')
 };
 
@@ -370,29 +389,100 @@ function updatePersonaBadgeUI() {
   dom.currentModelBadge.textContent = formatModelName(state.model);
 }
 
+async function checkOllamaStatus() {
+  try {
+    const res = await fetch('/api/ollama/status');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.running) {
+        if (dom.ollamaConnectionBadge) {
+          dom.ollamaConnectionBadge.innerHTML = '🟢 Connected';
+          dom.ollamaConnectionBadge.style.color = '#4ade80';
+        }
+        if (data.models && data.models.length > 0 && dom.ollamaModelInput && !dom.ollamaModelInput.value) {
+          dom.ollamaModelInput.value = data.models[0];
+          state.ollamaModel = data.models[0];
+        }
+        return true;
+      }
+    }
+  } catch (_) {}
+  if (dom.ollamaConnectionBadge) {
+    dom.ollamaConnectionBadge.innerHTML = '🔴 Offline';
+    dom.ollamaConnectionBadge.style.color = '#f87171';
+  }
+  return false;
+}
+
 function updateApiStatusUI() {
-  if (state.apiKey && state.apiKey.trim().length > 10) {
+  if (state.engine === 'ollama') {
     dom.apiStatusBanner.className = 'api-status-banner';
-    dom.apiStatusText.textContent = 'Gemini API Active';
+    dom.apiStatusText.textContent = `🦙 Ollama (${state.ollamaModel || 'llama3.2'}) - Zero Key`;
     dom.btnTopbarSettings.innerHTML = `
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-      <span>API Active</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>🦙 Ollama</span>
     `;
     dom.btnTopbarSettings.classList.remove('active-accent');
   } else {
-    dom.apiStatusBanner.className = 'api-status-banner no-key';
-    dom.apiStatusText.textContent = 'API Key Needed (Free)';
-    dom.btnTopbarSettings.innerHTML = `
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-      <span>Set API Key</span>
-    `;
-    dom.btnTopbarSettings.classList.add('active-accent');
+    if (state.apiKey && state.apiKey.trim().length > 10) {
+      dom.apiStatusBanner.className = 'api-status-banner';
+      dom.apiStatusText.textContent = 'Gemini API Active';
+      dom.btnTopbarSettings.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span>Gemini Active</span>
+      `;
+      dom.btnTopbarSettings.classList.remove('active-accent');
+    } else {
+      dom.apiStatusBanner.className = 'api-status-banner no-key';
+      dom.apiStatusText.textContent = 'API Key Needed';
+      dom.btnTopbarSettings.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>Set Key</span>
+      `;
+      dom.btnTopbarSettings.classList.add('active-accent');
+    }
   }
 }
 
 // ============================================================
 // EVENT BINDINGS
 // ============================================================
+
+
+async function testApiKeyConnection() {
+  const inputKey = dom.apiKeyInput ? dom.apiKeyInput.value.trim() : '';
+  const statusEl = dom.apiKeyTestStatus;
+  const btn = dom.btnTestApiKey;
+  if (!statusEl) return;
+
+  if (!inputKey || inputKey.length < 15) {
+    statusEl.innerHTML = '<span style="color:#f87171;">⚠️ Enter a valid API key first.</span>';
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  statusEl.innerHTML = '<span style="color:#38bdf8;">🔄 Testing connection...</span>';
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${inputKey}`);
+    if (res.ok) {
+      statusEl.innerHTML = '<span style="color:#4ade80;font-weight:600;">✅ Key is valid & working!</span>';
+    } else {
+      let msg = '';
+      try {
+        const json = await res.json();
+        msg = json?.error?.message || res.statusText;
+      } catch (_) {
+        msg = res.statusText;
+      }
+      statusEl.innerHTML = `<span style="color:#f87171;">❌ Error (${res.status}): ${escapeHtml(msg.substring(0, 80))}</span>`;
+    }
+  } catch (err) {
+    statusEl.innerHTML = `<span style="color:#f87171;">❌ Network error: ${escapeHtml(err.message)}</span>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
 
 function bindEvents() {
   // Sidebar toggle
@@ -477,6 +567,23 @@ function bindEvents() {
   dom.btnSaveSettings.addEventListener('click', saveSettingsFromForm);
 
   // Toggle API key password visibility
+  if (dom.engineSelect) {
+    dom.engineSelect.addEventListener('change', (e) => {
+      toggleEngineUI(e.target.value);
+    });
+  }
+  if (dom.btnRefreshOllama) {
+    dom.btnRefreshOllama.addEventListener('click', async () => {
+      showToast('Checking Ollama...');
+      const ok = await checkOllamaStatus();
+      if (ok) showToast('🟢 Ollama is running!');
+      else showToast('🔴 Ollama not detected on port 11434');
+    });
+  }
+  if (dom.btnTestApiKey) {
+    dom.btnTestApiKey.addEventListener('click', testApiKeyConnection);
+  }
+
   dom.btnToggleApiKeyEye.addEventListener('click', () => {
     const isPass = dom.apiKeyInput.type === 'password';
     dom.apiKeyInput.type = isPass ? 'text' : 'password';
@@ -1034,36 +1141,6 @@ async function generateAiResponse(chat) {
   isGenerating = true;
   dom.btnSendMessage.disabled = true;
 
-  // Check if API key is provided
-  if (!state.apiKey || state.apiKey.trim().length === 0) {
-    showTypingIndicator();
-    await delay(600);
-    removeTypingIndicator();
-
-    const mockResponseText = `👋 Hello! I am **AuraChat**, powered by **Google Gemini**.
-
-To start chatting for free:
-1. Get a **100% Free Gemini API Key** from [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Click the **API Key** button in the top right or sidebar.
-3. Paste your key and click **Save & Apply**!
-
-*Google AI Studio gives you a generous free tier with zero subscription cost and zero credit card required.*`;
-
-    const aiMsg = {
-      id: 'msg_' + Date.now(),
-      role: 'model',
-      text: mockResponseText,
-      timestamp: Date.now()
-    };
-    chat.messages.push(aiMsg);
-    saveState();
-    appendMessageElement(aiMsg, true);
-    playSound('receive');
-    isGenerating = false;
-    dom.btnSendMessage.disabled = false;
-    return;
-  }
-
   const typingEl = showTypingIndicator();
 
   // Create empty AI message element that will stream tokens
@@ -1072,15 +1149,6 @@ To start chatting for free:
   let fullAccumulatedText = '';
 
   const personaConfig = PERSONAS[state.persona] || PERSONAS.friendly;
-  const currentModel = state.model || 'gemini-1.5-flash';
-
-  // Construct Gemini API conversation payload
-  // Gemini expects: { contents: [{ role: 'user'|'model', parts: [{ text }] }] }
-  const formattedContents = chat.messages.map(m => ({
-    role: m.role === 'model' ? 'model' : 'user',
-    parts: [{ text: m.text }]
-  }));
-
   const todayFormatted = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -1096,9 +1164,18 @@ To start chatting for free:
     const results = await fetchLiveWebResults(lastUserText);
     if (results && results.length > 0) {
       webSourcesUsed = results;
-      liveWebContext = `\n\n[LIVE 2026 WEB ARTICLES & SOCIAL SOURCES - RETRIEVED ON ${todayFormatted}]\n` +
-        results.map((r, i) => `${i + 1}. Title: ${r.title}\n   Summary: ${r.snippet}\n   URL: ${r.url}`).join('\n\n') +
-        `\n\nINSTRUCTION: You have full access to these verified live 2026 web articles, social media discussions, and recent news. Synthesize these live findings together with your knowledge spanning ancient history to the present day to provide accurate, up-to-date answers!`;
+      liveWebContext = `
+
+[LIVE 2026 WEB ARTICLES & SOURCES - RETRIEVED ON ${todayFormatted}]
+` +
+        results.map((r, i) => `${i + 1}. Title: ${r.title}
+   Summary: ${r.snippet}
+   URL: ${r.url}`).join('
+
+') +
+        `
+
+INSTRUCTION: You have full access to these verified live 2026 web articles and news. Synthesize these live findings together with your knowledge spanning ancient history to the present day to provide accurate, up-to-date answers!`;
     }
   }
 
@@ -1106,164 +1183,264 @@ To start chatting for free:
 
 [Context & Temporal Awareness]
 - Today's current date is: ${todayFormatted}.
-- You have access to deep human knowledge from ancient times (classical antiquity, philosophy, world history) all the way up to 2026.${liveWebContext}`;
-
-  const payload = {
-    contents: formattedContents,
-    systemInstruction: {
-      parts: [{ text: enrichedSystemInstruction }]
-    },
-    generationConfig: {
-      temperature: state.temperature ?? 0.8,
-      maxOutputTokens: 2048
-    }
-  };
+- You have access to deep human knowledge from ancient times all the way up to 2026.${liveWebContext}`;
 
   abortController = new AbortController();
 
-  const candidateModels = [
-    state.model || DEFAULT_MODEL,
-    'gemini-flash-lite-latest',
-    'gemini-3.1-flash-lite',
-    'gemini-flash-latest'
-  ].filter((m, i, arr) => arr.indexOf(m) === i);
-
-  let success = false;
-  let lastError = null;
-
   try {
-    for (const modelToTry of candidateModels) {
-      try {
-        const sseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:streamGenerateContent?alt=sse&key=${state.apiKey.trim()}`;
+    // ========================================================
+    // ENGINE 1: OLLAMA (Local & Private - ZERO API KEY NEEDED)
+    // ========================================================
+    if (state.engine === 'ollama') {
+      const ollamaMessages = [
+        { role: 'system', content: enrichedSystemInstruction },
+        ...chat.messages.map(m => ({
+          role: m.role === 'model' ? 'assistant' : 'user',
+          content: m.text
+        }))
+      ];
 
-        const response = await fetch(sseUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload),
-          signal: abortController.signal
-        });
+      const modelName = state.ollamaModel || 'llama3.2';
 
-        if (!response.ok) {
-          let errDetails = '';
+      const response = await fetch('/api/ollama/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: modelName,
+          messages: ollamaMessages,
+          stream: true
+        }),
+        signal: abortController.signal
+      });
+
+      if (!response.ok) {
+        let errJson = {};
+        try { errJson = await response.json(); } catch (_) {}
+        const errMsg = errJson.error || `Ollama returned HTTP ${response.status}`;
+        throw new Error(errMsg);
+      }
+
+      removeTypingIndicator();
+
+      const aiMsg = {
+        id: 'msg_' + Date.now(),
+        role: 'model',
+        text: '',
+        timestamp: Date.now()
+      };
+      chat.messages.push(aiMsg);
+
+      aiMsgWrapper = appendMessageElement(aiMsg, true);
+      aiMsgBubble = aiMsgWrapper.querySelector('.msg-bubble');
+      aiMsgBubble.classList.add('is-streaming');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('
+');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
           try {
-            const errJson = await response.json();
-            errDetails = errJson?.error?.message || response.statusText;
-          } catch (_) {
-            errDetails = response.statusText;
-          }
-
-          // If 503 (high demand) or 404 (retired), cascade to next candidate model
-          if ((response.status === 503 || response.status === 404) && modelToTry !== candidateModels[candidateModels.length - 1]) {
-            console.warn(`Model ${modelToTry} returned ${response.status}, cascading to next model...`);
-            continue;
-          }
-          throw new Error(`Gemini API Error (${response.status}): ${errDetails}`);
-        }
-
-        removeTypingIndicator();
-
-        // Prepare live message container
-        const aiMsg = {
-          id: 'msg_' + Date.now(),
-          role: 'model',
-          text: '',
-          timestamp: Date.now()
-        };
-        chat.messages.push(aiMsg);
-
-        aiMsgWrapper = appendMessageElement(aiMsg, true);
-        aiMsgBubble = aiMsgWrapper.querySelector('.msg-bubble');
-        aiMsgBubble.classList.add('is-streaming');
-
-        // Read SSE stream chunks
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop(); // keep last incomplete line in buffer
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('data: ')) {
-              const jsonStr = trimmed.slice(6);
-              try {
-                const data = JSON.parse(jsonStr);
-                const candidate = data.candidates?.[0];
-                const textChunk = candidate?.content?.parts?.[0]?.text;
-                if (textChunk) {
-                  fullAccumulatedText += textChunk;
-                  aiMsg.text = fullAccumulatedText;
-                  aiMsgBubble.innerHTML = parseMarkdown(fullAccumulatedText);
-                  scrollToBottom(true);
-                }
-              } catch (jsonErr) {
-                // Ignore parse errors on partial frames
-              }
+            const data = JSON.parse(trimmed);
+            const token = data.message?.content || '';
+            if (token) {
+              fullAccumulatedText += token;
+              aiMsg.text = fullAccumulatedText;
+              aiMsgBubble.innerHTML = parseMarkdown(fullAccumulatedText);
+              scrollToBottom(true);
             }
-          }
+          } catch (_) {}
         }
+      }
 
-        // If streaming didn't produce text, fallback to standard generateContent
-        if (!fullAccumulatedText || fullAccumulatedText.trim().length === 0) {
-          const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${state.apiKey.trim()}`;
-          const directRes = await fetch(directUrl, {
+    } else {
+      // ========================================================
+      // ENGINE 2: GOOGLE GEMINI (Cloud API)
+      // ========================================================
+      const formattedContents = chat.messages.map(m => ({
+        role: m.role === 'model' ? 'model' : 'user',
+        parts: [{ text: m.text }]
+      }));
+
+      const payload = {
+        contents: formattedContents,
+        systemInstruction: {
+          parts: [{ text: enrichedSystemInstruction }]
+        },
+        generationConfig: {
+          temperature: state.temperature ?? 0.8,
+          maxOutputTokens: 2048
+        }
+      };
+
+      const candidateModels = [
+        state.model || DEFAULT_MODEL,
+        'gemini-flash-lite-latest',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-latest'
+      ].filter((m, i, arr) => arr.indexOf(m) === i);
+
+      let success = false;
+      let lastError = null;
+
+      for (const modelToTry of candidateModels) {
+        try {
+          const sseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:streamGenerateContent?alt=sse&key=${state.apiKey.trim()}`;
+
+          const response = await fetch(sseUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
             signal: abortController.signal
           });
-          if (directRes.ok) {
-            const directJson = await directRes.json();
-            fullAccumulatedText = directJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            aiMsg.text = fullAccumulatedText;
-            aiMsgBubble.innerHTML = parseMarkdown(fullAccumulatedText);
+
+          if (!response.ok) {
+            let errDetails = '';
+            try {
+              const errJson = await response.json();
+              errDetails = errJson?.error?.message || response.statusText;
+            } catch (_) {
+              errDetails = response.statusText;
+            }
+
+            if ((response.status === 503 || response.status === 404) && modelToTry !== candidateModels[candidateModels.length - 1]) {
+              console.warn(`Model ${modelToTry} returned ${response.status}, cascading to next model...`);
+              continue;
+            }
+
+            if (response.status === 400 || response.status === 401) {
+              throw new Error(`API Key Error (${response.status}): ${errDetails}.`);
+            } else if (response.status === 429) {
+              throw new Error(`Quota / Rate Limit reached (${response.status}): ${errDetails}.`);
+            }
+            throw new Error(`Gemini API Error (${response.status}): ${errDetails}`);
           }
+
+          removeTypingIndicator();
+
+          const aiMsg = {
+            id: 'msg_' + Date.now(),
+            role: 'model',
+            text: '',
+            timestamp: Date.now()
+          };
+          chat.messages.push(aiMsg);
+
+          aiMsgWrapper = appendMessageElement(aiMsg, true);
+          aiMsgBubble = aiMsgWrapper.querySelector('.msg-bubble');
+          aiMsgBubble.classList.add('is-streaming');
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('
+');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data: ')) {
+                const jsonStr = trimmed.slice(6);
+                try {
+                  const data = JSON.parse(jsonStr);
+                  const candidate = data.candidates?.[0];
+                  const textChunk = candidate?.content?.parts?.[0]?.text;
+                  if (textChunk) {
+                    fullAccumulatedText += textChunk;
+                    aiMsg.text = fullAccumulatedText;
+                    aiMsgBubble.innerHTML = parseMarkdown(fullAccumulatedText);
+                    scrollToBottom(true);
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+
+          // Direct generateContent fallback if streaming yielded empty text
+          if (!fullAccumulatedText || fullAccumulatedText.trim().length === 0) {
+            const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${state.apiKey.trim()}`;
+            const directRes = await fetch(directUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              signal: abortController.signal
+            });
+            if (directRes.ok) {
+              const directJson = await directRes.json();
+              fullAccumulatedText = directJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              aiMsg.text = fullAccumulatedText;
+              aiMsgBubble.innerHTML = parseMarkdown(fullAccumulatedText);
+            }
+          }
+
+          success = true;
+          break;
+
+        } catch (innerErr) {
+          lastError = innerErr;
+          if (innerErr.name === 'AbortError') break;
+          console.warn(`Attempt with ${modelToTry} encountered error:`, innerErr);
         }
+      }
 
-        aiMsgBubble.classList.remove('is-streaming');
-
-        if (webSourcesUsed && webSourcesUsed.length > 0) {
-          const sourcesFooter = document.createElement('div');
-          sourcesFooter.style.cssText = 'margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.74rem;color:#38bdf8;display:flex;align-items:center;gap:6px;';
-          sourcesFooter.innerHTML = `<span>🌐 Grounded with live 2026 web articles & data (${webSourcesUsed.length} sources)</span>`;
-          aiMsgBubble.appendChild(sourcesFooter);
-        }
-
-        saveState();
-        playSound('receive');
-        success = true;
-
-        // If Voice Talk Mode is ON, make the AI speak aloud automatically!
-        if (state.voiceTalkMode && fullAccumulatedText) {
-          speakText(fullAccumulatedText);
-        }
-
-        break; // Successfully handled by this model
-
-      } catch (innerErr) {
-        lastError = innerErr;
-        if (innerErr.name === 'AbortError') break;
-        console.warn(`Attempt with ${modelToTry} encountered error:`, innerErr);
+      if (!success && lastError) {
+        throw lastError;
       }
     }
 
-    if (!success && lastError) {
-      throw lastError;
+    if (aiMsgBubble) {
+      aiMsgBubble.classList.remove('is-streaming');
+    }
+
+    if (webSourcesUsed && webSourcesUsed.length > 0 && aiMsgBubble) {
+      const sourcesFooter = document.createElement('div');
+      sourcesFooter.style.cssText = 'margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.74rem;color:#38bdf8;display:flex;align-items:center;gap:6px;';
+      sourcesFooter.innerHTML = `<span>🌐 Grounded with live 2026 web articles & data (${webSourcesUsed.length} sources)</span>`;
+      aiMsgBubble.appendChild(sourcesFooter);
+    }
+
+    saveState();
+    playSound('receive');
+
+    if (state.voiceTalkMode && fullAccumulatedText) {
+      speakText(fullAccumulatedText);
     }
 
   } catch (error) {
     removeTypingIndicator();
-    console.error('Gemini API invocation error:', error);
+    console.error('AI invocation error:', error);
 
-    const errorMessageText = `⚠️ **Could not complete request**: ${error.message}\n\n*Check your API key in Settings, verify your internet connection, or try again in a moment.*`;
+    let errorFormatted = error.message;
+    if (state.engine === 'ollama' && (error.message.includes('not running') || error.message.includes('Failed to fetch') || error.message.includes('503'))) {
+      errorFormatted = `🦙 **Ollama is not running on your computer.**
+
+To chat without any API key:
+1. Open your terminal or PowerShell and run:
+   \`\`\`bash
+   ollama run llama3.2
+   \`\`\`
+2. If you haven't installed Ollama yet, download it for free from [ollama.com](https://ollama.com).
+
+*(You can also switch to Google Gemini in **Settings ⚙️** at any time).*`;
+    }
+
+    const errorMessageText = `⚠️ **Could not complete request**: ${errorFormatted}`;
     const errorMsg = {
       id: 'msg_err_' + Date.now(),
       role: 'model',
