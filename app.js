@@ -49,7 +49,7 @@ const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 
 const DEFAULT_STATE = {
   engine: 'ollama', // 'ollama' | 'gemini'
-  ollamaModel: 'llama3.2',
+  ollamaModel: 'llama3.2:1b',
   apiKey: DEFAULT_API_KEY,
   model: DEFAULT_MODEL,
   persona: 'friendly',
@@ -138,6 +138,8 @@ function loadState() {
     if (saved) {
       const parsed = JSON.parse(saved);
       const merged = { ...DEFAULT_STATE, ...parsed };
+      merged.engine = merged.engine || 'ollama';
+      merged.ollamaModel = merged.ollamaModel || 'llama3.2:1b';
       // Use active default key if none exists or if it was the revoked test token
       if (!merged.apiKey || merged.apiKey.trim().length === 0 || merged.apiKey === '') {
         merged.apiKey = DEFAULT_API_KEY;
@@ -373,6 +375,9 @@ async function fetchLiveWebResults(query) {
 }
 
 function formatModelName(model) {
+  if (state.engine === 'ollama') {
+    return `🦙 ${state.ollamaModel || 'llama3.2:1b'}`;
+  }
   if (model === 'gemini-flash-lite-latest') return 'Gemini Flash Lite';
   if (model === 'gemini-3.1-flash-lite') return 'Gemini 3.1 Flash Lite';
   if (model === 'gemini-flash-latest') return 'Gemini Flash Latest';
@@ -386,7 +391,7 @@ function updatePersonaBadgeUI() {
   dom.sidebarPersonaIcon.textContent = currentPersona.icon;
   dom.sidebarPersonaName.textContent = currentPersona.name;
   dom.currentPersonaHeader.textContent = `${currentPersona.icon} ${currentPersona.name}`;
-  dom.currentModelBadge.textContent = formatModelName(state.model);
+  dom.currentModelBadge.textContent = formatModelName(state.engine === 'ollama' ? state.ollamaModel : state.model);
 }
 
 async function checkOllamaStatus() {
