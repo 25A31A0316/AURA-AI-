@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aura AI — Private Local Assistant</title>
+  <title>Aura AI — Multilingual Local Assistant with Live Web</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 </head>
 <body>
-  <!-- Ambient background lighting -->
+  <!-- Ambient background glow elements -->
   <div class="bg-glow bg-glow-1"></div>
   <div class="bg-glow bg-glow-2"></div>
 
@@ -29,12 +29,17 @@
         </div>
       </div>
       <div class="header-actions">
+        <!-- Live Web Search Toggle -->
+        <button class="btn-action active-toggle" id="btnToggleWeb" title="Toggle Live 2026 Web Search & Articles Grounding">
+          <span id="webIcon">🌐</span>
+          <span id="webLabel">Web: ON</span>
+        </button>
         <button class="btn-action" id="btnNewChat" title="Start a fresh conversation">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>New Chat</span>
         </button>
-        <button class="btn-action" id="btnSettings" title="Settings & Model Config">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <button class="btn-action" id="btnSettings" title="Settings, Model & Language Configuration">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           <span>Settings</span>
         </button>
       </div>
@@ -46,36 +51,36 @@
         <!-- Welcome Screen -->
         <div class="welcome-card" id="welcomeCard">
           <div class="welcome-orb">⚡</div>
-          <h2 class="welcome-title">How can I assist you today?</h2>
-          <p class="welcome-subtitle">100% Private, offline AI powered by your local machine. No API keys, zero limits.</p>
+          <h2 class="welcome-title">Welcome to Aura AI</h2>
+          <p class="welcome-subtitle">All data sectors & live web articles • Multilingual in all world languages • Voice chat ready</p>
           
           <div class="prompts-grid">
-            <button class="starter-card" data-prompt="Explain quantum computing in simple terms with an everyday analogy.">
+            <button class="starter-card" data-prompt="What are the most notable world news and scientific breakthroughs happening recently in 2026?">
+              <span class="card-icon">🌐</span>
+              <div class="card-text">
+                <span class="card-heading">Live 2026 World News</span>
+                <span class="card-desc">Search recent articles, tech breakthroughs & current trends</span>
+              </div>
+            </button>
+            <button class="starter-card" data-prompt="Can we converse in another language? Please introduce yourself in English, Hindi, Spanish, and Telugu.">
+              <span class="card-icon">🗣️</span>
+              <div class="card-text">
+                <span class="card-heading">Multilingual Greetings</span>
+                <span class="card-desc">Talk fluently in Hindi, Telugu, Spanish, French, etc.</span>
+              </div>
+            </button>
+            <button class="starter-card" data-prompt="Give me a comprehensive analysis of the global economy, energy transition, and tech sector right now.">
+              <span class="card-icon">📊</span>
+              <div class="card-text">
+                <span class="card-heading">All Data Sectors Analysis</span>
+                <span class="card-desc">Explore finance, energy, medicine, AI and politics</span>
+              </div>
+            </button>
+            <button class="starter-card" data-prompt="Explain quantum computing with a simple, vivid real-world analogy.">
               <span class="card-icon">💡</span>
               <div class="card-text">
-                <span class="card-heading">Explain Quantum Computing</span>
-                <span class="card-desc">Break down qubits and superposition simply</span>
-              </div>
-            </button>
-            <button class="starter-card" data-prompt="Write a short, thrilling science fiction story about first contact.">
-              <span class="card-icon">🚀</span>
-              <div class="card-text">
-                <span class="card-heading">Creative Sci-Fi Story</span>
-                <span class="card-desc">First contact with deep space travelers</span>
-              </div>
-            </button>
-            <button class="starter-card" data-prompt="Teach me 3 classic mental models that improve daily decision-making.">
-              <span class="card-icon">🧠</span>
-              <div class="card-text">
-                <span class="card-heading">Mental Models for Decisions</span>
-                <span class="card-desc">First principles, Pareto, and second-order thinking</span>
-              </div>
-            </button>
-            <button class="starter-card" data-prompt="Write a clean, idiomatic Python script that parses JSON data and calculates metrics.">
-              <span class="card-icon">🐍</span>
-              <div class="card-text">
-                <span class="card-heading">Python Code Helper</span>
-                <span class="card-desc">Write clean, idiomatic functions with comments</span>
+                <span class="card-heading">Deep Explanations</span>
+                <span class="card-desc">Break down complex physics and science intuitively</span>
               </div>
             </button>
           </div>
@@ -83,7 +88,7 @@
       </div>
     </main>
 
-    <!-- Bottom Dock Input -->
+    <!-- Bottom Dock Input with Voice Chat -->
     <footer class="input-dock">
       <div class="dock-wrapper">
         <div class="input-container">
@@ -91,16 +96,27 @@
             id="chatInput" 
             class="chat-textarea" 
             rows="1" 
-            placeholder="Type your message... (Press Enter to send, Shift+Enter for newline)"
+            placeholder="Type your message or click the microphone to speak... (Press Enter to send)"
             aria-label="Chat input"></textarea>
-          <button class="btn-send" id="btnSend" title="Send message" aria-label="Send message">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          </button>
+          
+          <div class="input-actions-cluster">
+            <!-- Voice Input Button (Speech to Text) -->
+            <button class="btn-dock-icon" id="btnVoiceInput" title="Speak message (Voice to Text)" aria-label="Voice input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            </button>
+            
+            <!-- Send Button -->
+            <button class="btn-send" id="btnSend" title="Send message" aria-label="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
         </div>
         <div class="dock-footer">
           <span id="modelIndicator">Model: llama3.2:1b</span>
           <span>•</span>
-          <span>Zero API Keys • Local & Private</span>
+          <span id="voiceStatusHint">🎙️ Voice Chat & Live Web Grounding Active</span>
+          <span>•</span>
+          <span>Multilingual</span>
         </div>
       </div>
     </footer>
@@ -120,9 +136,16 @@
           <span class="form-hint">Matches any model pulled on your local Ollama instance.</span>
         </div>
         <div class="form-group">
-          <label class="form-label" for="settingSystemPrompt">System Instruction</label>
-          <textarea id="settingSystemPrompt" class="form-input" rows="3" placeholder="You are Aura, an intelligent and helpful AI assistant."></textarea>
-          <span class="form-hint">Controls Aura's tone, personality, and instructions.</span>
+          <label class="form-label" for="settingVoiceGender">Read Aloud Voice</label>
+          <select id="settingVoiceSelect" class="form-input">
+            <option value="auto">Auto-detect Language</option>
+          </select>
+          <span class="form-hint">Aura will read aloud in matching language and accents.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="settingSystemPrompt">System Instruction (Multilingual)</label>
+          <textarea id="settingSystemPrompt" class="form-input" rows="3" placeholder="Multilingual conversational AI instruction..."></textarea>
+          <span class="form-hint">Instructs the AI on tone, languages, and response formatting.</span>
         </div>
         <div class="form-group">
           <label class="form-label" for="settingTemperature">
