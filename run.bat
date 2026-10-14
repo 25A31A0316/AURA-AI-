@@ -1,7 +1,7 @@
 @echo off
-title AuraChat AI - Local Assistant
+title Aura AI - Local Assistant
 echo ====================================================
-echo      Starting AuraChat (Local Ollama & AI)
+echo        Starting Aura AI (Local Ollama)
 echo ====================================================
 echo.
 
@@ -16,16 +16,16 @@ if %ERRORLEVEL% NEQ 0 (
     )
     timeout /t 3 /nobreak >nul
 ) else (
-    echo [Ollama] Service already active on port 11434.
+    echo [Ollama] Service is running on port 11434.
 )
 
 :: 2. Launch browser automatically
-echo [AuraChat] Opening http://localhost:8000 in default browser...
+echo [Aura AI] Opening http://localhost:8000 in your browser...
 start http://localhost:8000
 
 :: 3. Run Python Server
-echo [Server] Starting AuraChat server on port 8000...
-echo Press Ctrl+C in this window to stop the server anytime.
+echo [Server] Starting Aura AI server on port 8000...
+echo Press Ctrl+C anytime to stop.
 echo ====================================================
 echo.
 python server.py

@@ -1,70 +1,63 @@
-# ✨ AuraChat — Modern AI Chat Box (Zero API Key with Ollama)
+# ⚡ Aura AI — Clean, Private Local AI Chat
 
-A high-performance conversational AI chat application supporting **Ollama Local AI (Zero API Keys)** and **Google Gemini Cloud**. Built with real-time token streaming, 2026 live web grounding, two-way hands-free voice conversation, and glassmorphism UI.
-
----
-
-## 🌟 Key Features
-
-* 🦙 **Native Ollama Local AI (Zero API Key Needed)**: Connects directly to local Ollama on your computer (`http://localhost:11434`). Preconfigured with Meta's **`llama3.2:1b`** model for fast, 100% private, offline chatting.
-* 🌐 **Live 2026 Web Search & Grounding**: Pulls verified recent web articles and discussions via built-in DuckDuckGo scraping.
-* 🎙️ **Hands-Free Two-Way Voice Mode**: Speak naturally to the AI and have it respond out loud automatically via browser SpeechRecognition and SpeechSynthesis.
-* ⚡ **Google Gemini Cloud (Optional)**: Dual-engine support—switch to Gemini Flash Lite anytime via Settings.
-* 🎭 **4 Built-in Personas**: Friendly Pal, Deep Thinker, Concise & Direct, Storyteller.
-* 🎨 **Glassmorphism Dark Mode**: Cyberpunk-inspired aesthetic with audio feedback and smooth token streaming.
+A fast, lightweight, and modern AI chat application powered by **local Ollama models** (default: Meta's **`llama3.2:1b`**). 
+**100% free, completely private, zero API keys required.**
 
 ---
 
-## 🚀 Quick Start
+## 🌟 Highlights
 
-### 1. Run with Ollama (Zero API Keys)
-Ollama is pre-installed on this machine with `llama3.2:1b`. Just start the local server:
+* 🔒 **100% Local & Private**: All conversations run entirely on your own hardware via Ollama. No third-party data tracking.
+* ⚡ **Zero API Keys**: No Google, OpenAI, or Anthropic subscriptions needed. Completely free forever.
+* 🚀 **Real-Time Streaming**: Token-by-token streaming with smooth typing effects and code block copy buttons.
+* 🎨 **Clean Glassmorphism UI**: Beautiful, distraction-free modern dark interface built with vanilla HTML/CSS/JS.
+* ⚙️ **Customizable**: Change models (`llama3.2:1b`, `mistral`, `deepseek-r1`), adjust creativity temperature, or set custom system instructions.
 
+---
+
+## 🚀 Quick Start (1-Click)
+
+### Option A: Using the Windows Launcher (Easiest)
+Simply double-click **`run.bat`**. It will automatically:
+1. Start the Ollama background service (if not already running).
+2. Start the local web server on port 8000.
+3. Open **`http://localhost:8000`** in your default web browser.
+
+### Option B: From the Terminal
 ```bash
+# 1. Start Ollama (if not already active)
+ollama serve
+
+# 2. Run the server
 python server.py
 ```
-Open **[http://localhost:8000](http://localhost:8000)** in your browser. The app connects automatically to Ollama with **zero keys required**.
-
-### 2. Live Cloudflare 24/7 Access Link
-* **Public URL:** [https://teach-police-hartford-increase.trycloudflare.com](https://teach-police-hartford-increase.trycloudflare.com)
-* **Cloudflare Workers Deployment:** `https://aura-ai.prasanthbehara81.workers.dev/`
+Open **[http://localhost:8000](http://localhost:8000)** in your browser!
 
 ---
 
-## 🦙 How Ollama Local AI Works
+## 🦙 Switching or Adding Models
 
-AuraChat includes a built-in reverse proxy in `server.py` that connects the frontend directly to Ollama at `http://localhost:11434`:
-- **Status Check:** `/api/ollama/status` checks if Ollama is running and lists installed models.
-- **Streaming Chat:** `/api/ollama/chat` streams model generation in real-time using NDJSON chunks.
+Aura AI comes configured for Meta's ultra-lightweight **`llama3.2:1b`** model. To use any other model:
 
-### Using Other Ollama Models:
-You can pull and use any model from the Ollama library. In your terminal:
-```bash
-ollama run mistral
-# or
-ollama run deepseek-r1
-```
-Then in AuraChat Settings (⚙️), simply type the model name into the **Ollama Model** field and click **Save Settings**.
+1. Download the model in your terminal:
+   ```bash
+   ollama run mistral
+   # or
+   ollama run deepseek-r1
+   ```
+2. Open Aura AI in your browser, click **Settings (⚙️)** in the top right, and type the model name into the **Ollama Model** field.
+3. Click **Save Settings**!
 
 ---
 
-## ⌨️ Shortcuts & Controls
-* `Enter`: Send message
-* `Shift + Enter`: Insert newline
-* `Voice Button (Microphone)`: Dictate message (Speech to Text)
-* `Voice Talk Mode (Topbar)`: Toggle hands-free voice conversation
-* `Settings (⚙️)`: Switch between Ollama and Gemini engines, change models, personas, or creativity temperature.
-* `Web Search Toggle`: Ground AI responses with live 2026 web research.
-
----
-
-## 📁 Project Architecture
+## 📁 Clean Architecture
 
 ```
 AURA-AI/
-├── index.html        # Glassmorphism chat interface & settings modal
-├── style.css         # Modern dark-mode styling & animations
-├── app.js            # State management, audio FX, Markdown & dual-engine controller
-├── server.py         # Python streaming server with Ollama proxy & web search
-└── README.md         # Documentation & quick start guide
+├── index.html        # Clean, modern single-page interface
+├── styles.css        # Responsive dark-theme styling with glassmorphism
+├── app.js            # Lightweight controller & streaming client (~180 lines)
+├── server.py         # Robust Python server & Ollama streaming proxy (~70 lines)
+├── run.bat           # 1-click Windows starter script
+└── README.md         # Project documentation
 ```

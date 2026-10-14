@@ -1,4 +1,4 @@
-# Cloudflared binary
+# Cloudflared & Executables
 cloudflared.exe
 *.exe
 
@@ -6,7 +6,7 @@ cloudflared.exe
 __pycache__/
 *.pyc
 
-# OS & Editor files
+# OS / Editor Files
 .DS_Store
 Thumbs.db
 .vscode/
