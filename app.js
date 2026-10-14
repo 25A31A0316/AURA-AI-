@@ -554,24 +554,26 @@ function bindEvents() {
   // Settings modal
   const openSettings = () => {
     initSettingsForm();
-    dom.settingsModal.classList.add('open');
+    if (dom.settingsModal) dom.settingsModal.classList.add('open');
     playSound('click');
   };
-  dom.btnOpenSettings.addEventListener('click', openSettings);
-  dom.btnTopbarSettings.addEventListener('click', openSettings);
-  dom.btnQuickPersona.addEventListener('click', openSettings);
-  dom.linkApiKeyReminder.addEventListener('click', openSettings);
+  if (dom.btnOpenSettings) dom.btnOpenSettings.addEventListener('click', openSettings);
+  if (dom.btnTopbarSettings) dom.btnTopbarSettings.addEventListener('click', openSettings);
+  if (dom.btnQuickPersona) dom.btnQuickPersona.addEventListener('click', openSettings);
+  if (dom.linkApiKeyReminder) dom.linkApiKeyReminder.addEventListener('click', openSettings);
 
-  dom.btnCloseSettings.addEventListener('click', closeSettingsModal);
-  dom.btnCancelSettings.addEventListener('click', closeSettingsModal);
+  if (dom.btnCloseSettings) dom.btnCloseSettings.addEventListener('click', closeSettingsModal);
+  if (dom.btnCancelSettings) dom.btnCancelSettings.addEventListener('click', closeSettingsModal);
 
-  dom.settingsModal.addEventListener('click', (e) => {
-    if (e.target === dom.settingsModal) closeSettingsModal();
-  });
+  if (dom.settingsModal) {
+    dom.settingsModal.addEventListener('click', (e) => {
+      if (e.target === dom.settingsModal) closeSettingsModal();
+    });
+  }
 
-  dom.btnSaveSettings.addEventListener('click', saveSettingsFromForm);
+  if (dom.btnSaveSettings) dom.btnSaveSettings.addEventListener('click', saveSettingsFromForm);
 
-  // Toggle API key password visibility
+  // Engine selection switch
   if (dom.engineSelect) {
     dom.engineSelect.addEventListener('change', (e) => {
       toggleEngineUI(e.target.value);
@@ -589,78 +591,107 @@ function bindEvents() {
     dom.btnTestApiKey.addEventListener('click', testApiKeyConnection);
   }
 
-  dom.btnToggleApiKeyEye.addEventListener('click', () => {
-    const isPass = dom.apiKeyInput.type === 'password';
-    dom.apiKeyInput.type = isPass ? 'text' : 'password';
-  });
+  if (dom.btnToggleApiKeyEye && dom.apiKeyInput) {
+    dom.btnToggleApiKeyEye.addEventListener('click', () => {
+      const isPass = dom.apiKeyInput.type === 'password';
+      dom.apiKeyInput.type = isPass ? 'text' : 'password';
+    });
+  }
 
   // Temperature range slider display
-  dom.temperatureRange.addEventListener('input', (e) => {
-    dom.temperatureVal.textContent = e.target.value;
-  });
+  if (dom.temperatureRange && dom.temperatureVal) {
+    dom.temperatureRange.addEventListener('input', (e) => {
+      dom.temperatureVal.textContent = e.target.value;
+    });
+  }
 
   // Persona card clicks in settings
-  dom.personaSelectionGrid.querySelectorAll('.persona-choice-card').forEach(card => {
-    card.addEventListener('click', () => {
-      dom.personaSelectionGrid.querySelectorAll('.persona-choice-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      playSound('click');
+  if (dom.personaSelectionGrid) {
+    dom.personaSelectionGrid.querySelectorAll('.persona-choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        dom.personaSelectionGrid.querySelectorAll('.persona-choice-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        playSound('click');
+      });
     });
-  });
+  }
 
   // Input textarea behavior
-  dom.messageInput.addEventListener('input', () => {
-    resizeInputTextarea();
-    updateCharCount();
-  });
+  if (dom.messageInput) {
+    dom.messageInput.addEventListener('input', () => {
+      resizeInputTextarea();
+      updateCharCount();
+    });
 
-  dom.messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+    dom.messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleUserSubmit();
+      }
+    });
+  }
+
+  if (dom.btnSendMessage) {
+    dom.btnSendMessage.addEventListener('click', () => {
       handleUserSubmit();
-    }
-  });
-
-  dom.btnSendMessage.addEventListener('click', () => {
-    handleUserSubmit();
-  });
+    });
+  }
 
   // Clear current chat
-  dom.btnClearCurrentChat.addEventListener('click', () => {
-    const chat = getCurrentChat();
-    if (!chat || chat.messages.length === 0) return;
-    if (confirm('Clear all messages in this conversation?')) {
-      chat.messages = [];
-      saveState();
-      renderActiveChat();
-      showToast('Conversation cleared');
-      playSound('click');
-    }
-  });
+  if (dom.btnClearCurrentChat) {
+    dom.btnClearCurrentChat.addEventListener('click', () => {
+      const chat = getCurrentChat();
+      if (!chat || chat.messages.length === 0) return;
+      if (confirm('Clear all messages in this conversation?')) {
+        chat.messages = [];
+        saveState();
+        renderActiveChat();
+        showToast('Conversation cleared');
+        playSound('click');
+      }
+    });
+  }
 
   // Export chat
-  dom.btnExportChat.addEventListener('click', exportCurrentChat);
+  if (dom.btnExportChat) {
+    dom.btnExportChat.addEventListener('click', exportCurrentChat);
+  }
 
   // Scroll to bottom floating button
-  dom.chatScrollArea.addEventListener('scroll', () => {
-    const fromBottom = dom.chatScrollArea.scrollHeight - dom.chatScrollArea.scrollTop - dom.chatScrollArea.clientHeight;
-    if (fromBottom > 240) {
-      dom.btnScrollBottom.classList.add('visible');
-    } else {
-      dom.btnScrollBottom.classList.remove('visible');
-    }
-  });
+  if (dom.chatScrollArea && dom.btnScrollBottom) {
+    dom.chatScrollArea.addEventListener('scroll', () => {
+      const fromBottom = dom.chatScrollArea.scrollHeight - dom.chatScrollArea.scrollTop - dom.chatScrollArea.clientHeight;
+      if (fromBottom > 240) {
+        dom.btnScrollBottom.classList.add('visible');
+      } else {
+        dom.btnScrollBottom.classList.remove('visible');
+      }
+    });
 
-  dom.btnScrollBottom.addEventListener('click', () => {
-    scrollToBottom(true);
-    playSound('click');
-  });
+    dom.btnScrollBottom.addEventListener('click', () => {
+      scrollToBottom(true);
+      playSound('click');
+    });
+  }
 
-  // Starter card click triggers
+  // Starter card click triggers (delegated to container + direct cards)
+  if (dom.welcomeHero) {
+    dom.welcomeHero.addEventListener('click', (e) => {
+      const card = e.target.closest('.starter-card');
+      if (card) {
+        const promptText = card.getAttribute('data-prompt');
+        if (promptText && dom.messageInput) {
+          dom.messageInput.value = promptText;
+          resizeInputTextarea();
+          handleUserSubmit();
+        }
+      }
+    });
+  }
   document.querySelectorAll('.starter-card').forEach(card => {
     card.addEventListener('click', () => {
       const promptText = card.getAttribute('data-prompt');
-      if (promptText) {
+      if (promptText && dom.messageInput) {
         dom.messageInput.value = promptText;
         resizeInputTextarea();
         handleUserSubmit();
@@ -669,36 +700,70 @@ function bindEvents() {
   });
 
   // Voice speech-to-text
-  dom.btnVoiceInput.addEventListener('click', toggleVoiceInput);
+  if (dom.btnVoiceInput) {
+    dom.btnVoiceInput.addEventListener('click', toggleVoiceInput);
+  }
 }
 
 function closeSettingsModal() {
-  dom.settingsModal.classList.remove('open');
+  if (dom.settingsModal) dom.settingsModal.classList.remove('open');
+}
+
+function toggleEngineUI(engine) {
+  const isOllama = engine === 'ollama';
+  if (dom.ollamaConfigSection) dom.ollamaConfigSection.style.display = isOllama ? 'block' : 'none';
+  if (dom.geminiConfigSection) dom.geminiConfigSection.style.display = isOllama ? 'none' : 'block';
+  if (dom.geminiModelGroup) dom.geminiModelGroup.style.display = isOllama ? 'none' : 'block';
+  const engineHint = document.getElementById('engineHint');
+  if (engineHint) {
+    engineHint.textContent = isOllama
+      ? '🦙 Runs directly on your computer via Ollama. No API key, zero token cost, complete privacy.'
+      : '✨ Cloud-hosted Google Gemini models. Requires a free Google AI Studio API key.';
+  }
 }
 
 function initSettingsForm() {
-  dom.apiKeyInput.value = state.apiKey || '';
-  dom.modelSelect.value = state.model || 'gemini-1.5-flash';
-  dom.temperatureRange.value = state.temperature ?? 0.8;
-  dom.temperatureVal.textContent = state.temperature ?? 0.8;
+  if (dom.engineSelect) dom.engineSelect.value = state.engine || 'ollama';
+  if (dom.ollamaModelInput) dom.ollamaModelInput.value = state.ollamaModel || 'llama3.2:1b';
+  toggleEngineUI(state.engine || 'ollama');
 
-  dom.personaSelectionGrid.querySelectorAll('.persona-choice-card').forEach(card => {
-    if (card.getAttribute('data-persona') === state.persona) {
-      card.classList.add('selected');
-    } else {
-      card.classList.remove('selected');
-    }
-  });
+  if (dom.apiKeyInput) dom.apiKeyInput.value = state.apiKey || '';
+  if (dom.modelSelect) dom.modelSelect.value = state.model || DEFAULT_MODEL;
+  if (dom.temperatureRange) dom.temperatureRange.value = state.temperature ?? 0.8;
+  if (dom.temperatureVal) dom.temperatureVal.textContent = state.temperature ?? 0.8;
+
+  if (dom.personaSelectionGrid) {
+    dom.personaSelectionGrid.querySelectorAll('.persona-choice-card').forEach(card => {
+      if (card.getAttribute('data-persona') === state.persona) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+  }
+
+  if (state.engine === 'ollama') {
+    checkOllamaStatus();
+  }
 }
 
 function saveSettingsFromForm() {
-  const chosenKey = dom.apiKeyInput.value.trim();
-  const chosenModel = dom.modelSelect.value;
-  const chosenTemp = parseFloat(dom.temperatureRange.value);
+  const chosenEngine = dom.engineSelect ? dom.engineSelect.value : (state.engine || 'ollama');
+  const chosenOllamaModel = dom.ollamaModelInput ? (dom.ollamaModelInput.value.trim() || 'llama3.2:1b') : 'llama3.2:1b';
+  const chosenKey = dom.apiKeyInput ? dom.apiKeyInput.value.trim() : '';
+  const chosenModel = dom.modelSelect ? dom.modelSelect.value : DEFAULT_MODEL;
+  const chosenTemp = dom.temperatureRange ? parseFloat(dom.temperatureRange.value) : 0.8;
 
-  const selectedCard = dom.personaSelectionGrid.querySelector('.persona-choice-card.selected');
-  const chosenPersona = selectedCard ? selectedCard.getAttribute('data-persona') : 'friendly';
+  let chosenPersona = 'friendly';
+  if (dom.personaSelectionGrid) {
+    const selectedCard = dom.personaSelectionGrid.querySelector('.persona-choice-card.selected');
+    if (selectedCard) {
+      chosenPersona = selectedCard.getAttribute('data-persona') || 'friendly';
+    }
+  }
 
+  state.engine = chosenEngine;
+  state.ollamaModel = chosenOllamaModel;
   state.apiKey = chosenKey;
   state.model = chosenModel;
   state.persona = chosenPersona;
