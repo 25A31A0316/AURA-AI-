@@ -117,10 +117,10 @@ class AuraHandler(http.server.SimpleHTTPRequestHandler):
                         clean_query = last_user_msg.strip()[:120]
                         articles = fetch_web_results(clean_query, max_results=4)
                         if articles:
-                            context_text = "\n\n[LIVE INTERNET ARTICLES & DATA]:\n"
+                            context_text = "\n\n[VERIFIED DATA ARCHIVES & RECENT 2026 ARTICLES - ALL SECTORS]:\n"
                             for idx, a in enumerate(articles):
                                 context_text += f"{idx+1}. {a['title']}: {a['snippet']} (Source: {a['url']})\n"
-                            context_text += "\nUse the verified live data above to answer accurately.\n"
+                            context_text += "\nINSTRUCTION: Synthesize the verified records and 2026 articles above alongside universal knowledge spanning ancient history to the present.\n"
 
                             # Inject into system prompt or append to context
                             if messages and messages[0].get('role') == 'system':

@@ -1,4 +1,4 @@
-# ⚡ Aura AI — Multilingual Assistant with Live Web Grounding & Voice Chat
+# ⚡ Aura AI — Universal Intelligence from Ancient Antiquity to 2026
 
 A fast, lightweight, and modern AI chat application powered by **local Ollama models** (Meta's **`llama3.2:1b`**) with **live web access across all data sectors**, **multilingual fluency**, and **hands-free voice conversation**. 
 
@@ -8,7 +8,7 @@ A fast, lightweight, and modern AI chat application powered by **local Ollama mo
 
 ## 🌟 Key Capabilities
 
-* 🌐 **Live Web & Article Grounding**: Dynamically searches the web for current 2026 data, breaking news, scientific articles, and sector-wide statistics (finance, technology, healthcare, energy, global politics).
+* 🏛️ **Universal Scope (Ancient Antiquity to 2026)**: Deep mastery of world history from ancient civilizations (Mesopotamia, Egypt, Indus Valley, Greece, Rome, Dynasty China, Mesoamerica) through medieval, renaissance, industrial, and real-time 2026 live web articles.\n* 🌐 **Live Web & Sector-Wide Grounding**: Automatically searches the internet for up-to-the-minute 2026 news, scientific discoveries, and sector-wide statistics (finance, technology, healthcare, space, energy, and global geopolitics).
 * 🗣️ **Multilingual Intelligence**: Speaks and understands all major languages fluently (English, Hindi, Telugu, Tamil, Spanish, French, German, Japanese, Chinese, Arabic, and more).
 * 🎙️ **Voice Chat (STT & TTS)**:
   - **Speech-to-Text**: Click the microphone in the input dock to dictate messages in your native language.
