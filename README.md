@@ -21,7 +21,8 @@ A fast, lightweight, and simple AI chat box powered by **local Ollama models** (
 ## 🌐 Live Access Links
 
 * **Local Machine Access:** [http://localhost:8000](http://localhost:8000)
-* **Cloudflare 24/7 Public Tunnel:** [https://teach-police-hartford-increase.trycloudflare.com](https://teach-police-hartford-increase.trycloudflare.com)
+* **Cloudflare Public Tunnel:** [https://upper-female-marc-obligations.trycloudflare.com](https://upper-female-marc-obligations.trycloudflare.com)
+* **Cloudflare Worker (Alternative):** [https://aura-ai.prasanthbehara81.workers.dev/](https://aura-ai.prasanthbehara81.workers.dev/)
 * **GitHub Repository:** [https://github.com/25A31A0316/AURA-AI-](https://github.com/25A31A0316/AURA-AI-)
 
 ---
