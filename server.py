@@ -123,16 +123,19 @@ class AuraHandler(http.server.SimpleHTTPRequestHandler):
                         
                         if not is_simple_chat:
                             clean_query = last_user_msg.strip()[:140]
-                            articles = fetch_web_results(clean_query, max_results=3)
+                            articles = fetch_web_results(clean_query, max_results=4)
                             if articles:
                                 web_context = "\n".join([f"[{i+1}] {a['title']}: {a['snippet']}" for i, a in enumerate(articles)])
-                                grounded_prompt = f"""[WEB FACTS]:
+                                grounded_prompt = f"""[VERIFIED WEB DATA & KNOWLEDGE]:
 {web_context}
 
 [USER QUESTION]:
 {last_user_msg}
 
-INSTRUCTION: You are Aura. Give a direct, simple answer in 1-3 sentences using the facts above. Be conversational and do not over-explain."""
+INSTRUCTION: You are Aura AI, a knowledgeable, accurate, and comprehensive assistant.
+Answer the user's question thoroughly using the facts above and your knowledge.
+Provide all requested data, steps, facts, and explanations with depth and precision.
+Use organized Markdown formatting (bullet points, clear headings, numbered steps) to present the data clearly."""
                                 
                                 for m in reversed(messages):
                                     if m.get('role') == 'user':
@@ -143,11 +146,16 @@ INSTRUCTION: You are Aura. Give a direct, simple answer in 1-3 sentences using t
                                 if source_links:
                                     sources_footer = "\n\n**🌐 Sources:**\n" + "\n".join(source_links)
 
+                merged_options = {
+                    'num_predict': 2048,
+                    'temperature': float(data.get('options', {}).get('temperature', 0.7))
+                }
+
                 ollama_payload = {
                     'model': data.get('model', 'llama3.2:1b'),
                     'messages': messages,
                     'stream': True,
-                    'options': data.get('options', {})
+                    'options': merged_options
                 }
 
                 req = urllib.request.Request(
@@ -161,7 +169,7 @@ INSTRUCTION: You are Aura. Give a direct, simple answer in 1-3 sentences using t
                     self.end_headers()
                     while True:
                         try:
-                            chunk = resp.read(256)
+                            chunk = resp.read(128)
                             if not chunk:
                                 break
                             self.wfile.write(chunk)

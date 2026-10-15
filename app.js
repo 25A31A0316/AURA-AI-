@@ -8,17 +8,17 @@
  * - Multilingual Support (Telugu, Hindi, Spanish, French, English, etc.)
  */
 
-const DEFAULT_SYSTEM_PROMPT = `You are Aura, a friendly, helpful, and concise AI chat assistant.
-- Keep answers simple, natural, and straight to the point (typically 1-3 sentences).
-- Do not over-explain, lecture, or write long paragraphs unless the user explicitly asks for deep detail.
-- Be conversational, warm, and polite.
-- Reply in whatever language the user speaks (English, Telugu, Hindi, Spanish, etc.).`;
+const DEFAULT_SYSTEM_PROMPT = `You are Aura AI, an intelligent, helpful, and comprehensive AI assistant.
+- COMPREHENSIVE DATA & ANSWERS: When asked questions (science, history, technology, news, data, coding, concepts, or tutorials), provide thorough, accurate, and complete information with all requested details, facts, numbers, and step-by-step explanations.
+- STRUCTURE & FORMATTING: Use clean Markdown with bullet points, numbered lists, bold text, and code blocks to present data clearly.
+- ADAPTIVE DEPTH: For casual greetings (like "hi" or "hello"), be warm, friendly, and natural. For questions, provide deep, informative, and complete data.
+- MULTILINGUAL: Fluently understand and respond in the language used by the user (English, Telugu, Hindi, Spanish, French, etc.).`;
 
 const state = {
   model: localStorage.getItem('aura_model') || 'llama3.2:1b',
   systemPrompt: (() => {
     const p = localStorage.getItem('aura_prompt');
-    if (!p || p.includes('CHRONOLOGICAL SCOPE') || p.includes('ancient prehistory') || p.includes('universal, deeply knowledgeable')) {
+    if (!p || p.includes('1-3 sentences') || p.includes('typically 1-3') || p.includes('CHRONOLOGICAL SCOPE') || p.includes('ancient prehistory')) {
       localStorage.setItem('aura_prompt', DEFAULT_SYSTEM_PROMPT);
       return DEFAULT_SYSTEM_PROMPT;
     }
@@ -414,7 +414,13 @@ function bindEvents() {
     }
   });
 
-  dom.btnSend.addEventListener('click', sendMessage);
+  dom.btnSend.addEventListener('click', () => {
+    if (isGenerating) {
+      if (abortCtrl) abortCtrl.abort();
+    } else {
+      sendMessage();
+    }
+  });
 }
 
 function openSettings() {
@@ -463,15 +469,28 @@ async function sendMessage() {
   dom.chatInput.value = '';
   dom.chatInput.style.height = 'auto';
 
-  // Create AI Message bubble placeholder
+  // Create AI Message bubble placeholder with visual thinking indicator
   const { row, bubble } = appendMessage('ai', '');
-  bubble.classList.add('typing-cursor');
+  bubble.innerHTML = `
+    <div class="thinking-state">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+      <span class="thinking-label">Aura is thinking & gathering data...</span>
+    </div>
+  `;
 
   isGenerating = true;
-  dom.btnSend.disabled = true;
+  // Change btnSend to a Stop button
+  dom.btnSend.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+    </svg>
+  `;
+  dom.btnSend.title = 'Stop generating';
+  dom.btnSend.disabled = false;
   abortCtrl = new AbortController();
 
   let accumulatedResponse = '';
+  let firstTokenReceived = false;
 
   try {
     const payload = {
@@ -522,12 +541,21 @@ async function sendMessage() {
           const chunk = JSON.parse(trimmed);
           const token = chunk.message?.content || '';
           if (token) {
+            if (!firstTokenReceived) {
+              firstTokenReceived = true;
+              bubble.innerHTML = '';
+              bubble.classList.add('typing-cursor');
+            }
             accumulatedResponse += token;
             bubble.innerHTML = renderMarkdown(accumulatedResponse);
             scrollToBottom();
           }
         } catch (_) {}
       }
+    }
+
+    if (!accumulatedResponse.trim()) {
+      bubble.innerHTML = '<span style="color:#f87171;">⚠️ Aura was unable to generate an answer for this question. Please try asking again.</span>';
     }
 
     state.messages.push({ role: 'assistant', content: accumulatedResponse });
@@ -545,6 +573,10 @@ async function sendMessage() {
   } finally {
     bubble.classList.remove('typing-cursor');
     isGenerating = false;
+    dom.btnSend.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    `;
+    dom.btnSend.title = 'Send message';
     dom.btnSend.disabled = false;
     scrollToBottom();
   }
