@@ -1,21 +1,20 @@
-# ⚡ Aura AI — Real-Time Universal Assistant with Auto-Voice Talk
+# ⚡ Aura AI — Simple, Clean & Private Local AI Chat Box
 
-A fast, lightweight, and modern AI chat application powered by **local Ollama models** (Meta's **`llama3.2:1b`**) with **real-time live web grounding across all sectors** and **hands-free two-way voice conversation** (Aura talks back out loud automatically!).
+A fast, lightweight, and simple AI chat box powered by **local Ollama models** (Meta's **`llama3.2:1b`**) with **concise answers**, **optional real-time web search**, and **hands-free voice conversation** (Aura talks back out loud!).
 
 **100% free, completely private, zero API keys required.**
 
 ---
 
-## 🌟 Key Capabilities
+## 🌟 Key Features
 
-* 🌐 **Real-Time Live Web Grounding**: Dynamically fetches current live articles, breaking news, and sector-wide statistics (finance, technology, healthcare, energy, global politics) and attaches clickable verified source links.
-* 🗣️ **Two-Way Voice Talk (Aura Speaks to You!)**:
-  - **Speech-to-Text**: Click the microphone in the input dock to dictate your thoughts. Auto-submits after you finish speaking.
-  - **Auto-Talk (TTS)**: Aura automatically speaks its answers out loud to you like a real conversational partner.
-* 🏛️ **Universal Scope (Ancient Antiquity to 2026)**: Deep mastery of world history from ancient civilizations (Mesopotamia, Egypt, Indus Valley, Greece, Rome, Dynasty China, Mesoamerica) through medieval, renaissance, industrial, and real-time 2026 live web articles.
-* 🗣️ **Multilingual Intelligence**: Speaks and understands all major languages fluently (English, Telugu, Hindi, Tamil, Spanish, French, German, Japanese, Chinese, Arabic, and more).
-* 🔒 **100% Local & Private**: Chatting and inference runs on your own hardware via Ollama. No token costs, zero API keys.
-* 🎨 **Modern Cyberpunk Glassmorphism UI**: Ambient background glow, live status dot, prompt starter cards, and Markdown code blocks with 1-click copy buttons.
+* 💬 **Simple, Crisp & Concise Responses**: No long lectures or over-explaining. Aura gets straight to the point in 1-3 conversational sentences.
+* 🌐 **Smart Web Grounding**: Automatically searches the web for current facts, news, and 2026 events when needed, attaching clickable source links.
+* 🗣️ **Two-Way Voice Talk**:
+  - **Dictate**: Click the microphone to speak naturally.
+  - **Aura Speaks**: Aura can read answers out loud like a real conversational partner.
+* 🔒 **100% Local & Private**: Runs directly on your device via Ollama. No token costs, zero API keys.
+* 🎨 **Clean, Minimalist Interface**: Dark glassmorphic design, friendly starter suggestions, and distraction-free chatting.
 
 ---
 

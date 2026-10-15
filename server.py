@@ -113,30 +113,35 @@ class AuraHandler(http.server.SimpleHTTPRequestHandler):
                 messages = data.get('messages', [])
                 sources_footer = ""
 
-                # Real-Time Live Grounding
+                # Real-Time Live Grounding (only for factual, current, or news lookups)
                 if use_web and messages:
                     last_user_msg = next((m['content'] for m in reversed(messages) if m.get('role') == 'user'), None)
                     if last_user_msg:
-                        clean_query = last_user_msg.strip()[:140]
-                        articles = fetch_web_results(clean_query, max_results=4)
-                        if articles:
-                            web_context = "\n".join([f"[{i+1}] {a['title']}: {a['snippet']} (Source: {a['url']})" for i, a in enumerate(articles)])
-                            grounded_prompt = f"""[REAL-TIME LIVE WEB DATA & RECENT ARTICLES]:
+                        clean_text = last_user_msg.strip().lower()
+                        # Skip web search for casual conversation, greetings, and creative writing
+                        is_simple_chat = bool(re.search(r'\b(hi|hello|hey|yo|howdy|sup|how are you|who are you|what is your name|joke|poem|story|email|write|code|thank|thanks|bye)\b', clean_text)) and not any(k in clean_text for k in ['news', 'latest', 'today', 'current', '2026', 'price', 'weather', 'stock', 'happened', 'score'])
+                        
+                        if not is_simple_chat:
+                            clean_query = last_user_msg.strip()[:140]
+                            articles = fetch_web_results(clean_query, max_results=3)
+                            if articles:
+                                web_context = "\n".join([f"[{i+1}] {a['title']}: {a['snippet']}" for i, a in enumerate(articles)])
+                                grounded_prompt = f"""[WEB FACTS]:
 {web_context}
 
 [USER QUESTION]:
 {last_user_msg}
 
-INSTRUCTION: You are Aura AI. Answer conversationally, clearly, and accurately using the real-time verified articles and facts above. Do not claim outdated knowledge cutoff dates."""
-                            
-                            for m in reversed(messages):
-                                if m.get('role') == 'user':
-                                    m['content'] = grounded_prompt
-                                    break
+INSTRUCTION: You are Aura. Give a direct, simple answer in 1-3 sentences using the facts above. Be conversational and do not over-explain."""
+                                
+                                for m in reversed(messages):
+                                    if m.get('role') == 'user':
+                                        m['content'] = grounded_prompt
+                                        break
 
-                            source_links = [f"- [{a['title']}]({a['url']})" for a in articles if a.get('url')]
-                            if source_links:
-                                sources_footer = "\n\n**🌐 Real-Time Sources:**\n" + "\n".join(source_links)
+                                source_links = [f"- [{a['title']}]({a['url']})" for a in articles if a.get('url')]
+                                if source_links:
+                                    sources_footer = "\n\n**🌐 Sources:**\n" + "\n".join(source_links)
 
                 ollama_payload = {
                     'model': data.get('model', 'llama3.2:1b'),

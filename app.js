@@ -8,17 +8,17 @@
  * - Multilingual Support (Telugu, Hindi, Spanish, French, English, etc.)
  */
 
-const DEFAULT_SYSTEM_PROMPT = `You are Aura AI, a universal, deeply knowledgeable, real-time, and multilingual AI companion.
-- CHRONOLOGICAL SCOPE (ANCIENT TO 2026): You possess profound knowledge spanning human history from ancient prehistory, ancient civilisations (Mesopotamia, Indus Valley, Ancient Egypt, Vedic India, Classical Greece and Rome, Dynastic China, the Maya, Incas, and global antiquity), through medieval and modern eras, up to real-time 2026 articles, breaking news, and current sector data.
-- REAL-TIME AWARENESS: You actively ground your answers in live web research and 2026 articles provided to you. Always provide up-to-date, accurate answers.
-- MULTILINGUAL MASTERY: You speak and understand all world languages fluently (including English, Telugu, Hindi, Tamil, Spanish, French, German, Japanese, Chinese, Arabic, and more). Always reply naturally in the language spoken or requested by the user.
-- CONVERSATIONAL VOICE: Speak naturally, engagingly, and warmly like an articulate, smart partner having a genuine conversation with the user.`;
+const DEFAULT_SYSTEM_PROMPT = `You are Aura, a friendly, helpful, and concise AI chat assistant.
+- Keep answers simple, natural, and straight to the point (typically 1-3 sentences).
+- Do not over-explain, lecture, or write long paragraphs unless the user explicitly asks for deep detail.
+- Be conversational, warm, and polite.
+- Reply in whatever language the user speaks (English, Telugu, Hindi, Spanish, etc.).`;
 
 const state = {
   model: localStorage.getItem('aura_model') || 'llama3.2:1b',
   systemPrompt: (() => {
     const p = localStorage.getItem('aura_prompt');
-    if (!p || p.length < 250) {
+    if (!p || p.includes('CHRONOLOGICAL SCOPE') || p.includes('ancient prehistory') || p.includes('universal, deeply knowledgeable')) {
       localStorage.setItem('aura_prompt', DEFAULT_SYSTEM_PROMPT);
       return DEFAULT_SYSTEM_PROMPT;
     }
@@ -26,7 +26,7 @@ const state = {
   })(),
   temperature: parseFloat(localStorage.getItem('aura_temp')) || 0.7,
   webSearch: localStorage.getItem('aura_web') !== 'false', // Default ON
-  autoTalk: localStorage.getItem('aura_autotalk') !== 'false', // Default ON: Aura talks back out loud!
+  autoTalk: localStorage.getItem('aura_autotalk') !== 'false', // Default ON
   voiceLanguage: localStorage.getItem('aura_voice') || 'auto',
   messages: []
 };
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateModelLabels() {
   if (dom.modelIndicator) {
-    dom.modelIndicator.textContent = `Model: ${state.model}`;
+    dom.modelIndicator.textContent = state.model;
   }
 }
 
@@ -97,10 +97,10 @@ function updateWebSearchUI() {
     if (state.webSearch) {
       dom.btnToggleWeb.classList.add('active-toggle');
       dom.webIcon.textContent = '🌐';
-      dom.webLabel.textContent = 'Real-Time Web: ON';
+      dom.webLabel.textContent = 'Web: ON';
     } else {
       dom.btnToggleWeb.classList.remove('active-toggle');
-      dom.webIcon.textContent = '⭕';
+      dom.webIcon.textContent = '🌐';
       dom.webLabel.textContent = 'Web: OFF';
     }
   }
@@ -109,18 +109,18 @@ function updateWebSearchUI() {
 function updateAutoTalkUI() {
   if (dom.btnToggleTalk) {
     if (state.autoTalk) {
-      dom.btnToggleTalk.classList.add('active-toggle', 'pulse-accent');
+      dom.btnToggleTalk.classList.add('active-toggle');
       dom.talkIcon.textContent = '🗣️';
-      dom.talkLabel.textContent = 'Voice Talk: ON';
+      dom.talkLabel.textContent = 'Voice: ON';
       if (dom.voiceStatusHint) {
-        dom.voiceStatusHint.textContent = '🗣️ Voice Talk Active (Aura talks back out loud!) • Real-Time Web';
+        dom.voiceStatusHint.textContent = 'Voice & Web Active';
       }
     } else {
-      dom.btnToggleTalk.classList.remove('active-toggle', 'pulse-accent');
+      dom.btnToggleTalk.classList.remove('active-toggle');
       dom.talkIcon.textContent = '🔇';
-      dom.talkLabel.textContent = 'Voice Talk: OFF';
+      dom.talkLabel.textContent = 'Voice: OFF';
       if (dom.voiceStatusHint) {
-        dom.voiceStatusHint.textContent = 'Real-Time Web Grounding Active • Ancient to 2026';
+        dom.voiceStatusHint.textContent = 'Simple & Private Chat';
       }
     }
   }
